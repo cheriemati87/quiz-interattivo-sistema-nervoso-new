@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Flashcard Sistema Nervoso</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f2f4f8;
+margin:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+.viewer{
+display:flex;
+align-items:center;
+justify-content:center;
+width:90%;
+max-width:900px;
+}
+
+.nav{
+font-size:40px;
+cursor:pointer;
+padding:20px;
+}
+
+.flashcard-container{
+perspective:1000px;
+width:600px;
+height:500px;
+}
+
+.flashcard{
+width:100%;
+height:100%;
+position:relative;
+transform-style:preserve-3d;
+transition:transform .6s;
+cursor:pointer;
+}
+
+.flashcard.flip{
+transform:rotateY(180deg);
+}
+
+.side{
+position:absolute;
+width:100%;
+height:100%;
+backface-visibility:hidden;
+background:white;
+border-radius:12px;
+box-shadow:0 8px 20px rgba(0,0,0,.2);
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+
+.back{
+transform:rotateY(180deg);
+}
+
+img{
+max-width:100%;
+max-height:250px;
+margin-bottom:15px;
+}
+
+.question{
+font-size:20px;
+font-weight:bold;
+text-align:center;
+}
+
+.answers{
+display:flex;
+flex-direction:column;
+gap:10px;
+width:100%;
+margin-top:10px;
+}
+
+.answer{
+padding:12px;
+border:none;
+border-radius:6px;
+background:#e5e9f0;
+cursor:pointer;
+font-size:16px;
+}
+
+.correct{
+background:#2ecc71;
+color:white;
+}
+
+.wrong{
+background:#e74c3c;
+color:white;
+}
+
+.controls{
+margin-top:15px;
+display:flex;
+gap:10px;
+}
+
+.voice{
+padding:8px 12px;
+border:none;
+border-radius:6px;
+background:#3498db;
+color:white;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Flashcard Sistema Nervoso</h1>
+
+<div class="viewer">
+
+<div class="nav" onclick="prevCard()">&#60;</div>
+
+<div class="flashcard-container">
+
+<div class="flashcard" id="card">
+
+<div class="side front">
+
+<img id="img">
+
+<div class="question" id="question"></div>
+
+</div>
+
+<div class="side back">
+
+<div class="answers" id="answers"></div>
+
+<div class="controls">
+<button class="voice" onclick="speak()">🔊 Voce</button>
+<button class="voice" onclick="stopSpeak()">⏹ Stop</button>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="nav" onclick="nextCard()">&#62;</div>
+
+</div>
+
+<script>
+
+const cards=[
+
+{img:"images/1-cervello.jpg",
+q:"Quale organo è mostrato nell’immagine?",
+answers:["Cuore","Cervello","Polmone","Fegato"],
+correct:1},
+
+{img:"images/2-cervello.jpg",
+q:"Qual è la funzione principale dell’organo mostrato nell’immagine?",
+answers:["Pompare il sangue","Controllare e coordinare le attività del corpo","Digerire il cibo","Produrre ossigeno"],
+correct:1},
+
+{img:"images/3-neurone.png",
+q:"Come si chiama la cellula rappresentata?",
+answers:["Globulo rosso","Cellula muscolare","Neurone","Cellula ossea"],
+correct:2},
+
+{img:"images/4-midollo-spinale.jpg",
+q:"Quale struttura è indicata nell’immagine?",
+answers:["Midollo spinale","Intestino","Cuore","Polmone"],
+correct:0},
+
+{img:"images/5-sistema-nervoso.png",
+q:"Che cosa mostra questa immagine?",
+answers:["Sistema nervoso","Sistema digestivo","Sistema respiratorio","Sistema scheletrico"],
+correct:0},
+
+{img:"images/6-cervelletto.jpg",
+q:"Quale parte del cervello controlla equilibrio e coordinazione?",
+answers:["Cervelletto","Midollo spinale","Cuore","Polmone"],
+correct:0},
+
+{img:"images/7-arco-riflesso.jpg",
+q:"Che cosa rappresenta la situazione mostrata?",
+answers:["Digestione","Arco riflesso","Respirazione","Circolazione"],
+correct:1},
+
+{img:"images/8-percorso-stimolo-risposta.jpg",
+q:"Che cosa rappresenta lo schema?",
+answers:["Percorso dell’aria","Percorso del sangue","Percorso dello stimolo e della risposta","Percorso del cibo"],
+correct:2},
+
+{img:"images/9-sistema-nervoso-periferico.png",
+q:"A quale parte del sistema nervoso appartengono i nervi mostrati in blu?",
+answers:["Sistema nervoso periferico","Sistema nervoso centrale","Sistema respiratorio","Sistema digestivo"],
+correct:0},
+
+{img:"images/10-organi-di-senso.jpg",
+q:"Che cosa mostrano le strutture nell’immagine?",
+answers:["Gli organi del sistema digestivo","Gli organi di senso","I muscoli del corpo","Le ossa del corpo"],
+correct:1},
+
+{img:"images/11-sistema-nervoso-centrale.jpg",
+q:"Quale parte del sistema nervoso è mostrata nell’immagine?",
+answers:["Sistema nervoso periferico","Sistema nervoso centrale","Sistema digestivo","Sistema respiratorio"],
+correct:1},
+
+{img:"images/12-nervi-e-muscoli.jpg",
+q:"Che cosa mostrano i nervi collegati ai muscoli?",
+answers:["Il movimento del sangue","La risposta motoria del corpo","Il processo digestivo","Il sistema respiratorio"],
+correct:1},
+
+{img:"images/13-assone.png",
+q:"Che cosa rappresenta la struttura mostrata all’estremità dell’assone?",
+answers:["Sinapsi","Guaina mielinica","Midollo spinale","Cervello"],
+correct:0},
+
+{img:"images/14-sinapsi-cerchiata.jpg",
+q:"Come si chiama la parte del neurone cerchiata?",
+answers:["Assone","Corpo cellulare","Sinapsi","Midollo"],
+correct:0},
+
+{img:"images/15-corpo-cellulare-cerchiato.png",
+q:"Come si chiama la parte del neurone che contiene il nucleo?",
+answers:["Assone","Corpo cellulare","Sinapsi","Midollo"],
+correct:1},
+
+{img:"images/16-neurone-sensoriale.png",
+q:"Qual è il ruolo del neurone sensoriale?",
+answers:["Porta informazioni dagli organi di senso al cervello","Fa muovere i muscoli","Produce sangue","Trasporta ossigeno"],
+correct:0}
+
+]
+
+let index=0
+
+function loadCard(){
+
+const c=cards[index]
+
+document.getElementById("img").src=c.img
+document.getElementById("question").innerText=c.q
+
+const answersDiv=document.getElementById("answers")
+answersDiv.innerHTML=""
+
+c.answers.forEach((a,i)=>{
+
+const btn=document.createElement("button")
+btn.className="answer"
+btn.innerText=a
+
+btn.onclick=()=>{
+
+if(i===c.correct){
+btn.classList.add("correct")
+}else{
+btn.classList.add("wrong")
+answersDiv.children[c.correct].classList.add("correct")
+}
+
+}
+
+answersDiv.appendChild(btn)
+
+})
+
+document.getElementById("card").classList.remove("flip")
+
+}
+
+document.getElementById("card").onclick=()=>{
+document.getElementById("card").classList.toggle("flip")
+}
+
+function nextCard(){
+index=(index+1)%cards.length
+loadCard()
+}
+
+function prevCard(){
+index=(index-1+cards.length)%cards.length
+loadCard()
+}
+
+function speak(){
+stopSpeak()
+let utter=new SpeechSynthesisUtterance(cards[index].q)
+utter.lang="it-IT"
+speechSynthesis.speak(utter)
+}
+
+function stopSpeak(){
+speechSynthesis.cancel()
+}
+
+loadCard()
+
+</script>
+
+</body>
+</html>
